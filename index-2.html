@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<title>Ma liste animé</title>
+<meta name="theme-color" content="#14110f"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Anime"/>
+<link rel="manifest" id="mf"/>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@400;500;600&display=swap');
+:root{--f1:'Bebas Neue',sans-serif;--f2:'Space Grotesk',sans-serif;--ink:#f1ebe0;--p:#14110f;--p2:#1c1815;--rule:#3a322b;--acc:#d98e3a}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;background:var(--p);min-height:100vh}
+body{color:var(--ink);font-family:var(--f2);padding-bottom:70px}
+.spin{animation:spin 1s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* LAYOUT */
+.wrap{padding:18px 14px 20px;max-width:1100px;margin:0 auto}
+.top-bar{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:12px}
+.top-left .eyebrow{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--acc);font-weight:600}
+.top-left h1{font-family:var(--f1);font-size:clamp(30px,8vw,46px);margin:0;line-height:.95}
+.top-right{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end;margin-top:4px}
+.icon-action{background:var(--p2);border:1px solid var(--rule);border-radius:999px;padding:7px 12px;color:var(--ink);font-size:13px;cursor:pointer;font-family:var(--f2);font-weight:600}
+.btn-add{background:var(--acc);border:none;border-radius:999px;padding:8px 16px;color:#14110f;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--f2)}
+.save-badge{font-size:10px;color:#4a7c59;opacity:0;transition:opacity .3s}
+.save-badge.show{opacity:1}
+
+/* STATS */
+.stats{display:flex;gap:14px;flex-wrap:wrap;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:10px 0;margin-bottom:14px}
+.stat{display:flex;align-items:baseline;gap:4px}
+.stat-n{font-family:var(--f1);font-size:22px}
+.stat-l{font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:#8a7e6f}
+
+/* CONTROLS */
+.controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.tabs{display:flex;gap:5px;flex-wrap:wrap}
+.tab{font-family:var(--f2);font-size:11px;font-weight:600;padding:6px 11px;border-radius:999px;border:1px solid var(--rule);background:transparent;color:#a99c8a;cursor:pointer;white-space:nowrap}
+.tab.on{background:var(--acc);border-color:var(--acc);color:#14110f}
+.search-box{background:var(--p2);border:1px solid var(--rule);border-radius:999px;padding:7px 13px;color:var(--ink);font-family:var(--f2);font-size:13px;flex:1;min-width:120px;outline:none}
+.search-box:focus{border-color:var(--acc)}
+.search-box::placeholder{color:#6b6053}
+
+/* GRID */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(125px,1fr));gap:12px}
+.card{background:var(--p2);border:1px solid var(--rule);border-radius:10px;overflow:hidden;display:flex;flex-direction:column}
+.card-art{position:relative;width:100%;aspect-ratio:2/3;background:#1c1815;overflow:hidden;cursor:pointer}
+.card-art img{width:100%;height:100%;object-fit:cover;display:block}
+.ph{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;color:#8a7e6f;padding:8px;text-align:center}
+.ph span{font-size:9px;line-height:1.2}
+.card-btns{position:absolute;top:5px;right:5px;display:flex;flex-direction:column;gap:3px}
+.cbtn{width:24px;height:24px;border-radius:50%;background:rgba(20,17,15,.82);border:none;color:#ddd2c2;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:12px}
+.cbtn.red:active{background:#c1453d;color:#fff}
+.card-body{padding:8px 8px 10px;display:flex;flex-direction:column;gap:4px;flex:1}
+.card-title{font-size:11.5px;font-weight:600;line-height:1.2;color:var(--ink);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.card-prog{font-size:9.5px;color:#8a7e6f}
+.status-pill{align-self:flex-start;font-size:9.5px;font-weight:600;padding:3px 8px;border-radius:999px;border:1px solid;cursor:pointer;font-family:var(--f2);background:transparent;margin-top:2px}
+.card-eps{display:flex;gap:4px;flex-wrap:wrap;align-items:center;margin-top:3px;padding-top:4px;border-top:1px solid rgba(58,50,43,.5)}
+.s-badge{background:rgba(217,142,58,.15);color:#d98e3a;font-weight:700;padding:2px 5px;border-radius:4px;font-size:8.5px}
+.e-badge{background:rgba(161,150,138,.12);color:#a99c8a;padding:2px 5px;border-radius:4px;font-size:8.5px}
+.live-badge{background:rgba(224,85,85,.15);color:#e05555;font-weight:700;font-size:8.5px;padding:2px 5px;border-radius:4px;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
+
+/* BOTTOM NAV */
+.bnav{position:fixed;bottom:0;left:0;right:0;background:rgba(20,17,15,.96);backdrop-filter:blur(10px);border-top:1px solid var(--rule);display:flex;z-index:40;padding-bottom:env(safe-area-inset-bottom)}
+.nbtn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:9px 0;background:transparent;border:none;color:#6b6053;cursor:pointer;font-family:var(--f2);font-size:9.5px;font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+.nbtn.on{color:var(--acc)}
+.nicon{font-size:19px;line-height:1}
+
+/* OVERLAYS */
+.ov{position:fixed;inset:0;background:rgba(10,8,7,.85);backdrop-filter:blur(5px);display:flex;align-items:flex-end;justify-content:center;z-index:50}
+.ov.center{align-items:center;padding:20px}
+.sheet{background:linear-gradient(180deg,#221e1a,#1a1612);border:1px solid var(--rule);border-bottom:none;border-radius:20px 20px 0 0;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;padding-bottom:env(safe-area-inset-bottom)}
+.handle{width:36px;height:4px;background:var(--rule);border-radius:999px;margin:11px auto 0}
+.sheet-hero{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-bottom:1px solid var(--rule)}
+.hero-img{width:64px;height:90px;object-fit:cover;border-radius:8px;flex-shrink:0;background:#2a2420;box-shadow:0 4px 14px rgba(0,0,0,.5)}
+.hero-ph{width:64px;height:90px;border-radius:8px;flex-shrink:0;background:#2a2420;display:flex;align-items:center;justify-content:center;font-size:22px}
+.hero-info{flex:1;display:flex;flex-direction:column;gap:4px;padding-top:2px}
+.hero-title{font-family:var(--f1);font-size:18px;letter-spacing:.01em;line-height:1.1;color:var(--ink)}
+.hero-sub{font-size:11px;color:#8a7e6f}
+.xbtn{background:rgba(255,255,255,.07);border:none;color:#a99c8a;cursor:pointer;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.sec{padding:12px 16px;border-bottom:1px solid var(--rule)}
+.sec-title{font-size:9.5px;text-transform:uppercase;letter-spacing:.12em;color:#6b6053;font-weight:700;margin-bottom:9px}
+.inp{background:rgba(255,255,255,.05);border:1px solid var(--rule);border-radius:10px;padding:10px 13px;color:var(--ink);font-family:var(--f2);font-size:13px;width:100%;outline:none}
+.inp:focus{border-color:var(--acc)}
+.inp::placeholder{color:#4a4038}
+.search-row{display:flex;gap:7px}
+.search-btn{background:var(--acc);border:none;border-radius:10px;padding:10px 14px;color:#14110f;font-family:var(--f2);font-weight:700;font-size:12px;cursor:pointer;white-space:nowrap;flex-shrink:0}
+.res-list{display:flex;flex-direction:column;gap:4px;margin-top:9px;max-height:190px;overflow-y:auto}
+.res-row{display:flex;align-items:center;gap:9px;background:var(--p);border:1px solid transparent;border-radius:8px;padding:6px;cursor:pointer;text-align:left;width:100%}
+.res-row.sel{border-color:var(--acc)}
+.res-row img{width:34px;height:48px;object-fit:cover;border-radius:5px;flex-shrink:0;background:#2a2420}
+.res-info{display:flex;flex-direction:column;min-width:0;flex:1}
+.res-name{font-size:12px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.res-year{font-size:10px;color:#6b6053}
+.res-check{color:var(--acc);font-size:15px;flex-shrink:0}
+.status-row{display:flex;gap:7px}
+.st-opt{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:9px 5px;border-radius:10px;border:1.5px solid var(--rule);cursor:pointer;background:transparent;font-family:var(--f2);font-size:10.5px;font-weight:600;color:#6b6053}
+.st-opt .ico{font-size:18px;line-height:1}
+.save-btn{display:flex;align-items:center;justify-content:center;gap:7px;background:var(--acc);color:#14110f;border:none;border-radius:12px;padding:13px;font-family:var(--f2);font-weight:700;font-size:13px;cursor:pointer;width:calc(100% - 32px);margin:12px 16px}
+.save-btn:disabled{opacity:.4}
+
+/* DELETE CONFIRM */
+.del-panel{background:linear-gradient(180deg,#221e1a,#1a1612);border:1px solid #c1453d;border-radius:18px;width:100%;max-width:300px;padding:22px;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.del-icon{font-size:34px}
+.del-title{font-family:var(--f1);font-size:21px;color:var(--ink)}
+.del-sub{font-size:12px;color:#a99c8a;line-height:1.45}
+.del-name{color:var(--ink);font-weight:600}
+.del-btns{display:flex;gap:9px;width:100%}
+.del-cancel{flex:1;background:transparent;border:1px solid var(--rule);border-radius:10px;padding:11px;color:#a99c8a;font-family:var(--f2);font-weight:600;font-size:13px;cursor:pointer}
+.del-ok{flex:1;background:#c1453d;border:none;border-radius:10px;padding:11px;color:#fff;font-family:var(--f2);font-weight:700;font-size:13px;cursor:pointer}
+
+/* PHOTO VIEWER */
+.photo-view img{max-width:88vw;max-height:86vh;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.8);object-fit:contain;display:block}
+
+/* TIER LIST */
+.tier-page{padding:18px 14px 20px;max-width:1100px;margin:0 auto}
+.tier-search{background:var(--p2);border:1px solid var(--rule);border-radius:999px;padding:9px 15px;color:var(--ink);font-family:var(--f2);font-size:13px;width:100%;outline:none;margin-bottom:14px}
+.tier-search::placeholder{color:#6b6053}
+.tier-sec{margin-bottom:22px}
+.tier-sec-hd{display:flex;align-items:center;gap:9px;margin-bottom:9px;padding-bottom:7px;border-bottom:1px solid var(--rule)}
+.tier-sec-label{font-size:13px;font-weight:600;color:var(--ink)}
+.tier-sec-count{font-size:10px;color:#6b6053;margin-left:auto}
+.tier-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(105px,1fr));gap:9px}
+.tier-card{background:var(--p2);border:1px solid var(--rule);border-radius:9px;overflow:hidden;display:flex;flex-direction:column;cursor:pointer}
+.tier-art{width:100%;aspect-ratio:2/3;overflow:hidden;position:relative}
+.tier-art img{width:100%;height:100%;object-fit:cover;display:block}
+.tier-body{padding:7px 7px 9px;display:flex;flex-direction:column;gap:3px}
+.tier-name{font-size:10.5px;font-weight:600;line-height:1.2;color:var(--ink);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.mini-stars{display:flex;gap:1px}
+.mini-star{font-size:12px;opacity:.2}
+.mini-star.on{opacity:1}
+.no-rated-title{font-size:10px;color:#6b6053;text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:9px}
+
+/* RATING POPUP */
+.rate-panel{background:linear-gradient(180deg,#221e1a,#1a1612);border:1px solid var(--rule);border-radius:18px;width:100%;max-width:300px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.7)}
+.rate-bg-wrap{position:relative;width:100%;height:160px;overflow:hidden}
+.rate-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:blur(14px) brightness(.3) saturate(1.4);transform:scale(1.1)}
+.rate-fg{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:72px;height:100px;object-fit:cover;border-radius:9px;box-shadow:0 6px 22px rgba(0,0,0,.7)}
+.rate-xbtn{position:absolute;top:9px;right:9px;background:rgba(0,0,0,.5);border:none;color:#fff;width:27px;height:27px;border-radius:50%;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.rate-body{padding:14px 16px 18px;display:flex;flex-direction:column;align-items:center;gap:10px}
+.rate-title{font-family:var(--f1);font-size:18px;color:var(--ink);text-align:center;line-height:1.1}
+.rate-stars{display:flex;gap:5px}
+.rate-star{font-size:30px;cursor:pointer;transition:transform .1s;filter:grayscale(1) opacity(.3)}
+.rate-star.on{filter:none}
+.rate-star:active{transform:scale(1.3)}
+.rate-lbl{font-size:12px;font-weight:600;color:var(--acc);height:17px}
+.rate-clear{background:transparent;border:1px solid var(--rule);border-radius:999px;padding:5px 15px;color:#6b6053;font-family:var(--f2);font-size:11px;cursor:pointer}
+
+/* THEME PICKER */
+.theme-sheet{background:#1c1815;border:1px solid var(--rule);border-bottom:none;border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:0 16px 28px}
+.theme-title{font-family:var(--f1);font-size:21px;color:var(--ink);margin-bottom:14px}
+.theme-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:9px}
+.theme-sw{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer}
+.theme-circle{width:48px;height:48px;border-radius:50%;border:3px solid transparent;transition:transform .15s,border-color .15s}
+.theme-circle.on{border-color:var(--ink);transform:scale(1.1)}
+.theme-sw span{font-size:9.5px;color:#a99c8a;font-weight:600;text-align:center}
+
+/* INSTALL BTN */
+.install-btn{background:linear-gradient(135deg,#d98e3a,#f0a94a);border:none;border-radius:999px;padding:8px 16px;color:#14110f;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--f2);display:flex;align-items:center;gap:6px}
+
+/* INSTALL GUIDE */
+.guide-panel{background:linear-gradient(180deg,#221e1a,#1a1612);border:1px solid var(--rule);border-bottom:none;border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:0 0 28px}
+.guide-step{display:flex;align-items:center;gap:12px;padding:11px 18px;border-bottom:1px solid var(--rule)}
+.guide-num{width:28px;height:28px;border-radius:50%;background:var(--acc);color:#14110f;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.guide-text{font-size:13px;color:var(--ink);line-height:1.4}
+.guide-text span{color:var(--acc);font-weight:600}
+
+/* INSTALL BANNER */
+.install-banner{display:none;align-items:center;justify-content:space-between;gap:9px;background:var(--p2);border:1px solid var(--acc);border-radius:10px;padding:9px 12px;margin-bottom:12px;font-size:12px}
+.install-banner.show{display:flex}
+.install-banner button{background:var(--acc);color:#14110f;border:none;border-radius:999px;padding:6px 12px;font-weight:600;font-size:11px;cursor:pointer;white-space:nowrap}
+.install-banner .xb{background:transparent;color:#a99c8a;padding:3px}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="module">
+import React from "https://esm.sh/react@18.2.0";
+import ReactDOM from "https://esm.sh/react-dom@18.2.0/client";
+const {useState,useEffect,useMemo,useCallback,useRef} = React;
+const h = React.createElement;
+
+// PWA manifest
+const manifestData = {
+  name:"Ma liste animé",
+  short_name:"Anime",
+  start_url:"./",
+  display:"standalone",
+  background_color:"#14110f",
+  theme_color:"#14110f",
+  description:"Suivi de ta liste d'animés",
+  orientation:"portrait",
+  icons:[
+    {src:"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='32' fill='%2314110f'/%3E%3Ctext x='96' y='130' font-size='100' text-anchor='middle' fill='%23d98e3a'%3E%E2%AD%90%3C/text%3E%3C/svg%3E",sizes:"192x192",type:"image/svg+xml",purpose:"any maskable"},
+    {src:"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='80' fill='%2314110f'/%3E%3Ctext x='256' y='340' font-size='260' text-anchor='middle' fill='%23d98e3a'%3E%E2%AD%90%3C/text%3E%3C/svg%3E",sizes:"512x512",type:"image/svg+xml",purpose:"any maskable"}
+  ]
+};
+const mb = new Blob([JSON.stringify(manifestData)],{type:"application/json"});
+document.getElementById("mf").href = URL.createObjectURL(mb);
+
+// Register Service Worker
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('./sw.js').catch(()=>{});
+}
+
+const SK = "anime-tracker-v3";
+const SR = "anime-ratings-v1";
+const ST = "anime-theme";
+
+// ── THEMES ──────────────────────────────────────────────────────────────────
+const THEMES = [
+  {id:"black",   label:"Noir",     p:"#000",    p2:"#0a0a0a", rule:"#1a1a1a", acc:"#d98e3a", ink:"#fff"},
+  {id:"white",   label:"Blanc",    p:"#fff",    p2:"#f0f0f0", rule:"#d0d0d0", acc:"#1a1a1a", ink:"#111"},
+  {id:"dark",    label:"Sombre",   p:"#14110f", p2:"#1c1815", rule:"#3a322b", acc:"#d98e3a", ink:"#f1ebe0"},
+  {id:"midnight",label:"Minuit",   p:"#0a0e1a", p2:"#111827", rule:"#1e2a3a", acc:"#6366f1", ink:"#e8eaf6"},
+  {id:"forest",  label:"Forêt",    p:"#0d1a0f", p2:"#132015", rule:"#1e3a22", acc:"#4ade80", ink:"#e8f5e9"},
+  {id:"crimson", label:"Cramoisi", p:"#150a0a", p2:"#1e1010", rule:"#3a1a1a", acc:"#ef4444", ink:"#fce8e8"},
+  {id:"ocean",   label:"Océan",    p:"#070f1a", p2:"#0d1a2e", rule:"#1a2e42", acc:"#38bdf8", ink:"#e0f2fe"},
+  {id:"purple",  label:"Violet",   p:"#0f0a1a", p2:"#1a1028", rule:"#2e1a42", acc:"#a855f7", ink:"#f3e8ff"},
+  {id:"rose",    label:"Rose",     p:"#1a0a10", p2:"#2a1018", rule:"#3a1a28", acc:"#f472b6", ink:"#fce8f3"},
+  {id:"light",   label:"Clair",    p:"#f5f0e8", p2:"#ece7df", rule:"#d4cec6", acc:"#b45309", ink:"#1c1815"},
+];
+function applyTheme(t){
+  const r = document.documentElement;
+  r.style.setProperty("--p",   t.p);
+  r.style.setProperty("--p2",  t.p2);
+  r.style.setProperty("--rule",t.rule);
+  r.style.setProperty("--acc", t.acc);
+  r.style.setProperty("--ink", t.ink);
+  document.body.style.background = t.p;
+  try{localStorage.setItem(ST,t.id)}catch{}
+}
+
+// ── ANIME DATA ───────────────────────────────────────────────────────────────
+const RAW = [
+  ["Akashic Records of Bastard Magic Instructor","S1 Ep12","done"],
+  ["Attack on Titan","","unknown"],
+  ["Assassination Classroom","S2 Ep25","done"],
+  ["Battle Game in 5 Seconds","S1 Ep12","done"],
+  ["Black Clover","S2 Ep132","done"],
+  ["Bleach","S3 Ep14","done"],
+  ["Blood Lad","S1 Ep10","done"],
+  ["Blue Lock","S1 Ep24","todo"],
+  ["Bofuri","S2 Ep12","done"],
+  ["By the Grace of the Gods","S2 Ep24","done"],
+  ["Call of the Night","S2 Ep12","done"],
+  ["Classroom of the Elite","S3 Ep13","todo"],
+  ["Cyberpunk Edgerunners","S1 Ep10","done"],
+  ["DanMachi","S4 Ep13","unknown"],
+  ["Dark Moon The Blood Altar","S1 Ep12","done"],
+  ["Darling in the FranXX","S1 Ep24","done"],
+  ["Demon Slayer","S3 Ep11","todo"],
+  ["Dragon Ball Z","","todo"],
+  ["Edens Zero","S2 Ep25","done"],
+  ["86 Eighty Six","S1 Ep23","done"],
+  ["The Eminence in Shadow","S2 Ep12","todo"],
+  ["Fairy Tail","Ep328","todo"],
+  ["Farming Life in Another World","S2 Ep13","done"],
+  ["Food Wars","S3 Ep24","todo"],
+  ["Fullmetal Alchemist Brotherhood","S1 Ep51","done"],
+  ["Kakegurui","S2 Ep12","todo"],
+  ["100 Kanojo","S2 Ep12","done"],
+  ["Goblin Slayer","S1 Ep12","done"],
+  ["Haikyuu","S2 Ep25","todo"],
+  ["Jigokuraku","S2 Ep12","done"],
+  ["Hunter x Hunter","Ep148","done"],
+  ["Horimiya","S1 Ep13","done"],
+  ["Cheat Skill Isekai","S1 Ep13","done"],
+  ["Isekai wa Smartphone","","unknown"],
+  ["Jujutsu Kaisen","S2 Ep23","todo"],
+  ["Kaguya-sama Love Is War","S3 Ep13","done"],
+  ["Kuroko no Basket","S3 Ep25","todo"],
+  ["Kobayashi-san Chi no Maid Dragon","","unknown"],
+  ["Maou no Ore ga Dorei Elf","S1 Ep24","done"],
+  ["Kusuriya no Hitorigoto","S2 Ep48","todo"],
+  ["Link Click","","unknown"],
+  ["Masamune-kun no Revenge","S2 Ep12","done"],
+  ["Mashle","S2 Ep12","todo"],
+  ["Boku no Hero Academia","S6 Ep25","todo"],
+  ["Mikadono Sanshimai","S1 Ep12","done"],
+  ["Yozakura Family","S1 Ep27","done"],
+  ["Tensei 7th Prince","S1 Ep12","todo"],
+  ["Kumo desu ga Nani ka","S1 Ep24","done"],
+  ["Tensei Slime","S3 Ep24","todo"],
+  ["Mushoku Tensei","S2 Ep12","todo"],
+  ["My Dress-Up Darling","S2 Ep24","done"],
+  ["Level 1 Unique Skill","S1 Ep12","done"],
+  ["Naruto","Ep500","done"],
+  ["No Game No Life","S1 Ep12","done"],
+  ["One Piece","Ep1088","todo"],
+  ["Oshi no Ko","S3 Ep11","todo"],
+  ["Overlord","S4 Ep13","done"],
+  ["Seraph of the End","S2 Ep12","unknown"],
+  ["Platinum End","S1 Ep24","done"],
+  ["Pokemon","","done"],
+  ["Ragna Crimson","S1 Ep24","done"],
+  ["Bunny Girl Senpai","S1 Ep13","todo"],
+  ["Tensei shitara Ken deshita","S1 Ep12","done"],
+  ["Tate no Yuusha no Nariagari","","unknown"],
+  ["Sakamoto Days","S1 Ep11","done"],
+  ["Nanatsu no Taizai","S4 Ep24","done"],
+  ["Kenja no Deshi wo Nanoru Kenja","S1 Ep12","done"],
+  ["Shironeko Project Zero Chronicle","S1 Ep12","done"],
+  ["Solo Leveling","S2 Ep13","todo"],
+  ["Soul Eater","S1 Ep51","done"],
+  ["Tenkuu Shinpan","S1 Ep12","done"],
+  ["Spy x Family","","unknown"],
+  ["Otonari no Ossan","S1 Ep12","todo"],
+  ["Tensai Ouji Akaji Kokka","","unknown"],
+  ["The Beginning After the End","S1 Ep12","todo"],
+  ["Kaifuku Jutsushi no Yarinaoshi","S1 Ep12","done"],
+  ["5-toubun no Hanayome","S2 Ep12","unknown"],
+  ["Shiunji-ke no Kodomotachi","S1 Ep12","done"],
+  ["Saijaku Tamer Gomi Hiroi","S1 Ep12","done"],
+  ["Chiyu Mahou no Machigatta Tsukaikata","S1 Ep13","todo"],
+  ["Tokyo Ghoul","S2 Ep12","done"],
+  ["Tomodachi Game","","unknown"],
+  ["Tower of God","S2 Ep23","done"],
+  ["Ultramarine Magmell","S1 Ep13","done"],
+  ["Shuumatsu no Valkyrie","S3 Ep15","unknown"],
+  ["Vinland Saga","","unknown"],
+  ["Wind Breaker","S2 Ep12","done"],
+];
+
+const STATUS = {
+  done:    {label:"À jour",   color:"#4a7c59", bg:"rgba(74,124,89,.14)"},
+  todo:    {label:"À voir",   color:"#c1453d", bg:"rgba(193,69,61,.14)"},
+  unknown: {label:"Non noté", color:"#9a8c78", bg:"rgba(154,140,120,.16)"},
+};
+
+function seed(){
+  return RAW.map(([title,progress,status],i)=>({id:`s${i}`,title,progress,status,image:null,imageState:"idle",episodes:null,totalSeasons:null,airing:false}));
+}
+function load(){
+  try{
+    const raw=localStorage.getItem(SK)||localStorage.getItem("anime-tracker-v2")||localStorage.getItem("anime-tracker-v1");
+    if(raw){const p=JSON.parse(raw);if(Array.isArray(p)&&p.length)return p.map(a=>({...a,imageState:(!a.image||a.imageState==="error")?"idle":a.imageState}));}
+  }catch{}
+  return seed();
+}
+
+// ── API ──────────────────────────────────────────────────────────────────────
+async function anilistSearch(q,multi=false){
+  const gql = multi
+    ? `query($s:String){Page(perPage:8){media(search:$s,type:ANIME,sort:SEARCH_MATCH){id title{romaji english}coverImage{extraLarge large}startDate{year}}}}`
+    : `query($s:String){Media(search:$s,type:ANIME,sort:SEARCH_MATCH){id title{romaji english}coverImage{extraLarge large}episodes status format relations{edges{relationType(version:2) node{format}}}}}`;
+  const res = await fetch("https://graphql.anilist.co",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({query:gql,variables:{s:q}})
+  });
+  if(!res.ok) throw new Error();
+  const j = await res.json();
+  if(j.errors) throw new Error();
+  return multi ? (j.data?.Page?.media||[]) : j.data?.Media;
+}
+
+async function fetchInfo(title){
+  const tries = [title, title.split(" ").slice(0,3).join(" ")];
+  for(const q of tries){
+    try{
+      const m = await anilistSearch(q);
+      if(!m) continue;
+      const image = m.coverImage?.extraLarge||m.coverImage?.large||null;
+      const episodes = m.episodes||null;
+      const airing = m.status==="RELEASING";
+      const tv = ["TV","TV_SHORT"];
+      const edges = m.relations?.edges||[];
+      const sq = edges.filter(e=>e.relationType==="SEQUEL"&&tv.includes(e.node?.format)).length;
+      const pq = edges.filter(e=>e.relationType==="PREQUEL"&&tv.includes(e.node?.format)).length;
+      return {image,episodes,totalSeasons:Math.max(1,pq+1+sq),airing};
+    }catch{}
+    await new Promise(r=>setTimeout(r,200));
+  }
+  return null;
+}
+
+async function searchCovers(q){
+  try{
+    const list = await anilistSearch(q,true);
+    return list.map(m=>({
+      id:m.id,
+      title:m.title?.english||m.title?.romaji||"?",
+      year:m.startDate?.year,
+      imgThumb:m.coverImage?.large||null,
+      imgFull:m.coverImage?.extraLarge||m.coverImage?.large||null,
+    }));
+  }catch{return[];}
+}
+
+// ── IMAGE QUEUE ──────────────────────────────────────────────────────────────
+function useQueue(items,setItems){
+  useEffect(()=>{
+    let dead=false;
+    const pending=items.filter(a=>a.imageState==="idle");
+    if(!pending.length)return;
+    let i=0;
+    async function step(){
+      if(dead)return;
+      const a=pending[i];
+      if(!a)return;
+      setItems(p=>p.map(x=>x.id===a.id?{...x,imageState:"loading"}:x));
+      const info=await fetchInfo(a.title);
+      if(!dead)setItems(p=>p.map(x=>x.id===a.id?{...x,imageState:info?.image?"done":"error",image:info?.image||null,episodes:info?.episodes||null,totalSeasons:info?.totalSeasons||1,airing:info?.airing||false}:x));
+      i++;
+      setTimeout(step,480);
+    }
+    step();
+    return()=>{dead=true;};
+  },[items.length]);
+}
+
+// ── COMPONENTS ───────────────────────────────────────────────────────────────
+
+function Placeholder({title,state}){
+  return h("div",{className:"ph"},
+    state==="loading"?h("span",{className:"spin",style:{fontSize:"18px"}},"⟳"):h("span",null,"🎬"),
+    state!=="loading"&&h("span",null,title)
+  );
+}
+
+// Search results list (shared by Add & Edit)
+function CoverResults({results,selected,onSelect,searching}){
+  if(searching)return h("div",{style:{padding:"8px 0",fontSize:"12px",color:"#8a7e6f",display:"flex",gap:"6px",alignItems:"center"}},h("span",{className:"spin"},"⟳")," Recherche...");
+  if(!results.length)return null;
+  return h("div",{className:"res-list"},
+    results.map(r=>h("button",{key:r.id,className:"res-row"+(selected?.id===r.id?" sel":""),onClick:()=>onSelect(r)},
+      r.imgThumb?h("img",{src:r.imgThumb,alt:""}):h("div",{style:{width:34,height:48,borderRadius:5,background:"#2a2420",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",fontSize:"14px"}},"🎬"),
+      h("div",{className:"res-info"},h("span",{className:"res-name"},r.title),r.year&&h("span",{className:"res-year"},r.year)),
+      selected?.id===r.id&&h("span",{className:"res-check"},"✓")
+    ))
+  );
+}
+
+// Status buttons (shared)
+function StatusPicker({value,onChange}){
+  return h("div",{className:"status-row"},
+    [{key:"done",icon:"✅",label:"À jour"},{key:"todo",icon:"🕐",label:"À voir"},{key:"unknown",icon:"❓",label:"Non noté"}]
+    .map(o=>h("button",{
+      key:o.key,
+      className:"st-opt",
+      style:value===o.key?{borderColor:STATUS[o.key].color,background:STATUS[o.key].bg,color:STATUS[o.key].color}:{},
+      onClick:()=>onChange(o.key)
+    },h("span",{className:"ico"},o.icon),o.label))
+  );
+}
+
+// ADD PANEL
+function AddPanel({onAdd,onClose}){
+  const [query,setQuery]=useState("");
+  const [results,setResults]=useState([]);
+  const [searching,setSearching]=useState(false);
+  const [selected,setSelected]=useState(null);
+  const [progress,setProgress]=useState("");
+  const [status,setStatus]=useState("unknown");
+
+  useEffect(()=>{
+    if(!query.trim()){setResults([]);return;}
+    const t=setTimeout(async()=>{setSearching(true);const r=await searchCovers(query);setResults(r);setSearching(false);},500);
+    return()=>clearTimeout(t);
+  },[query]);
+
+  const handleAdd=()=>{
+    if(!selected&&!query.trim())return;
+    onAdd({id:`c${Date.now()}`,title:selected?.title||query.trim(),progress:progress.trim(),status,image:selected?.imgFull||null,imageState:selected?.imgFull?"done":"idle",episodes:null,totalSeasons:null,airing:false});
+    onClose();
+  };
+
+  return h("div",{className:"ov",onClick:onClose},
+    h("div",{className:"sheet",onClick:e=>e.stopPropagation()},
+      h("div",{className:"handle"}),
+      h("div",{className:"sheet-hero"},
+        selected?.imgFull?h("img",{className:"hero-img",src:selected.imgFull,alt:""}):h("div",{className:"hero-ph"},"🔍"),
+        h("div",{className:"hero-info"},
+          h("div",{className:"hero-title"},selected?selected.title:"Ajouter un animé"),
+          selected?.year&&h("div",{className:"hero-sub"},selected.year)
+        ),
+        h("button",{className:"xbtn",onClick:onClose},"✕")
+      ),
+      h("div",{className:"sec"},
+        h("div",{className:"sec-title"},"🔍 Rechercher"),
+        h("div",{className:"search-row"},
+          h("input",{className:"inp",autoFocus:true,placeholder:"Nom de l'animé...",value:query,onChange:e=>{setQuery(e.target.value);setSelected(null);}}),
+        ),
+        h(CoverResults,{results,selected,onSelect:r=>{setSelected(r);},searching})
+      ),
+      h("div",{className:"sec"},
+        h("div",{className:"sec-title"},"📍 Progression"),
+        h("input",{className:"inp",placeholder:"ex: S2 Ep12 — optionnel",value:progress,onChange:e=>setProgress(e.target.value)})
+      ),
+      h("div",{className:"sec"},
+        h("div",{className:"sec-title"},"🎯 Statut"),
+        h(StatusPicker,{value:status,onChange:setStatus})
+      ),
+      h("button",{className:"save-btn",onClick:handleAdd,disabled:!selected&&!query.trim()},"+  Ajouter à la liste")
+    )
+  );
+}
+
+// EDIT PANEL
+function EditPanel({anime,onSave,onClose}){
+  const [query,setQuery]=useState(anime.title);
+  const [results,setResults]=useState([]);
+  const [searching,setSearching]=useState(false);
+  const [selectedCover,setSelectedCover]=useState(null);
+  const [progress,setProgress]=useState(anime.progress||"");
+  const [status,setStatus]=useState(anime.status||"unknown");
+
+  const doSearch=useCallback(async q=>{
+    if(!q.trim()){setResults([]);return;}
+    setSearching(true);const r=await searchCovers(q);setResults(r);setSearching(false);
+  },[]);
+
+  useEffect(()=>{doSearch(anime.title);},[]);
+
+  const currentImg = selectedCover?.imgFull||anime.image||null;
+
+  const handleSave=()=>{
+    onSave(anime.id,{progress:progress.trim(),status,image:currentImg,imageState:currentImg?"done":"error"});
+    onClose();
+  };
+
+  return h("div",{className:"ov",onClick:onClose},
+    h("div",{className:"sheet",onClick:e=>e.stopPropagation()},
+      h("div",{className:"handle"}),
+      h("div",{className:"sheet-hero"},
+        currentImg?h("img",{className:"hero-img",src:currentImg,alt:""}):h("div",{className:"hero-ph"},"🎬"),
+        h("div",{className:"hero-info"},
+          h("div",{className:"hero-title"},anime.title),
+          anime.progress&&h("div",{className:"hero-sub"},anime.progress)
+        ),
+        h("button",{className:"xbtn",onClick:onClose},"✕")
+      ),
+      h("div",{className:"sec"},
+        h("div",{className:"sec-title"},"🖼️ Changer la jaquette"),
+        h("div",{className:"search-row"},
+          h("input",{className:"inp",placeholder:"Chercher...",value:query,onChange:e=>setQuery(e.target.value),onKeyDown:e=>{if(e.key==="Enter")doSearch(query);}}),
+          h("button",{className:"search-btn",onClick:()=>doSearch(query)},searching?h("span",{className:"spin"},"⟳"):"Chercher")
+        ),
+        h(CoverResults,{results,selected:selectedCover,onSelect:setSelectedCover,searching:false})
+      ),
+      h("div",{className:"sec"},
+        h("div",{className:"sec-title"},"📍 Progression"),
+        h("input",{className:"inp",placeholder:"ex: S2 Ep12",value:progress,onChange:e=>setProgress(e.target.value)})
+      ),
+      h("div",{className:"sec"},
+        h("div",{className:"sec-title"},"🎯 Statut"),
+        h(StatusPicker,{value:status,onChange:setStatus})
+      ),
+      h("button",{className:"save-btn",onClick:handleSave},"✓  Sauvegarder")
+    )
+  );
+}
+
+// DELETE CONFIRM
+function DeleteConfirm({anime,onConfirm,onCancel}){
+  return h("div",{className:"ov center",onClick:onCancel},
+    h("div",{className:"del-panel",onClick:e=>e.stopPropagation()},
+      h("div",{className:"del-icon"},"🗑️"),
+      h("div",{className:"del-title"},"Supprimer ?"),
+      h("div",{className:"del-sub"},"Tu vas retirer ",h("span",{className:"del-name"},anime.title)," de ta liste."),
+      h("div",{className:"del-btns"},
+        h("button",{className:"del-cancel",onClick:onCancel},"Annuler"),
+        h("button",{className:"del-ok",onClick:onConfirm},"Supprimer")
+      )
+    )
+  );
+}
+
+// PHOTO VIEWER
+function PhotoViewer({anime,onClose}){
+  return h("div",{className:"ov center",onClick:onClose},
+    h("div",{className:"photo-view"},
+      anime.image?h("img",{src:anime.image,alt:anime.title,onClick:e=>e.stopPropagation()}):h("div",{style:{color:"#8a7e6f",fontSize:"16px"}},"Pas d'image")
+    )
+  );
+}
+
+// ANIME CARD
+function AnimeCard({anime,onToggle,onEdit,onDelete,onPhoto}){
+  const s=STATUS[anime.status];
+  return h("div",{className:"card"},
+    h("div",{className:"card-art",onClick:()=>onPhoto(anime)},
+      anime.image?h("img",{src:anime.image,alt:anime.title,loading:"lazy"}):h(Placeholder,{title:anime.title,state:anime.imageState}),
+      h("div",{className:"card-btns"},
+        h("button",{className:"cbtn",onClick:e=>{e.stopPropagation();onEdit(anime);},"aria-label":"Modifier"},"✏️"),
+        h("button",{className:"cbtn red",onClick:e=>{e.stopPropagation();onDelete(anime);},"aria-label":"Supprimer"},"✕")
+      )
+    ),
+    h("div",{className:"card-body"},
+      h("div",{className:"card-title",title:anime.title},anime.title),
+      anime.progress&&h("div",{className:"card-prog"},anime.progress),
+      h("button",{className:"status-pill",style:{color:s.color,background:s.bg,borderColor:s.color},onClick:()=>onToggle(anime.id)},s.label),
+      (anime.episodes||anime.totalSeasons>1||anime.airing)&&h("div",{className:"card-eps"},
+        anime.totalSeasons>1&&h("span",{className:"s-badge"},"S"+anime.totalSeasons),
+        anime.episodes&&h("span",{className:"e-badge"},anime.episodes+" éps"),
+        anime.airing&&h("span",{className:"live-badge"},"● Live")
+      )
+    )
+  );
+}
+
+// THEME PICKER
+function ThemePicker({onClose}){
+  const [cur,setCur]=useState(()=>localStorage.getItem(ST)||"dark");
+  return h("div",{className:"ov",onClick:onClose},
+    h("div",{className:"theme-sheet",onClick:e=>e.stopPropagation()},
+      h("div",{className:"handle"}),
+      h("div",{style:{padding:"14px 0 14px"},className:"theme-title"},"🎨 Couleur du fond"),
+      h("div",{className:"theme-grid"},
+        THEMES.map(t=>h("div",{key:t.id,className:"theme-sw",onClick:()=>{setCur(t.id);applyTheme(t);}},
+          h("div",{className:"theme-circle"+(cur===t.id?" on":""),style:{background:`linear-gradient(135deg,${t.p2},${t.acc})`}}),
+          h("span",null,t.label)
+        ))
+      )
+    )
+  );
+}
+
+// INSTALL
+// Store install prompt globally so it's never lost
+window._installPrompt = null;
+window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); window._installPrompt = e; });
+
+function useInstall(){
+  const [prompt,setPrompt]=useState(()=>window._installPrompt);
+  useEffect(()=>{
+    const fn=e=>{e.preventDefault();window._installPrompt=e;setPrompt(e);};
+    window.addEventListener("beforeinstallprompt",fn);
+    return()=>window.removeEventListener("beforeinstallprompt",fn);
+  },[]);
+  const install=async()=>{
+    const p=prompt||window._installPrompt;
+    if(p){p.prompt();await p.userChoice;window._installPrompt=null;setPrompt(null);}
+  };
+  return {prompt:prompt||window._installPrompt, install};
+}
+
+function InstallBanner(){return null;} // replaced by button in top bar
+
+function InstallGuide({onClose}){
+  const {prompt,install}=useInstall();
+  const isIos=/iPad|iPhone|iPod/.test(navigator.userAgent);
+  const isAndroid=/Android/.test(navigator.userAgent);
+  return h("div",{className:"ov",onClick:onClose},
+    h("div",{className:"guide-panel",onClick:e=>e.stopPropagation()},
+      h("div",{className:"handle"}),
+      h("div",{style:{padding:"14px 18px 12px",borderBottom:"1px solid var(--rule)"}},
+        h("div",{style:{fontFamily:"var(--f1)",fontSize:"22px",color:"var(--ink)"}},"📲 Installer l'app"),
+        h("div",{style:{fontSize:"12px",color:"#8a7e6f",marginTop:"4px"}},"Accède à ta liste depuis l'écran d'accueil")
+      ),
+      prompt&&h("div",{style:{padding:"14px 18px"}},
+        h("button",{
+          onClick:()=>{install();onClose();},
+          style:{width:"100%",background:"linear-gradient(135deg,#d98e3a,#f0a94a)",border:"none",borderRadius:"12px",padding:"13px",color:"#14110f",fontFamily:"var(--f2)",fontWeight:700,fontSize:"14px",cursor:"pointer"}
+        },"⬇️  Installer maintenant")
+      ),
+      !prompt&&isAndroid&&h("div",null,
+        h("div",{className:"guide-step"},h("div",{className:"guide-num"},"1"),h("div",{className:"guide-text"},"Appuie sur les ",h("span",null,"⋮ trois points")," en haut à droite")),
+        h("div",{className:"guide-step"},h("div",{className:"guide-num"},"2"),h("div",{className:"guide-text"},"Appuie sur ",h("span",null,'"Ajouter à l'écran d'accueil"'))),
+        h("div",{className:"guide-step"},h("div",{className:"guide-num"},"3"),h("div",{className:"guide-text"},"Confirme en appuyant sur ",h("span",null,'"Ajouter"')))
+      ),
+      !prompt&&isIos&&h("div",null,
+        h("div",{className:"guide-step"},h("div",{className:"guide-num"},"1"),h("div",{className:"guide-text"},"Appuie sur l'icône ",h("span",null,"Partager 􀈂")," en bas")),
+        h("div",{className:"guide-step"},h("div",{className:"guide-num"},"2"),h("div",{className:"guide-text"},"Appuie sur ",h("span",null,'"Sur l'écran d'accueil"'))),
+        h("div",{className:"guide-step"},h("div",{className:"guide-num"},"3"),h("div",{className:"guide-text"},"Appuie sur ",h("span",null,'"Ajouter"')))
+      ),
+      h("div",{style:{padding:"12px 18px 0"}},
+        h("button",{onClick:onClose,style:{width:"100%",background:"transparent",border:"1px solid var(--rule)",borderRadius:"12px",padding:"11px",color:"#a99c8a",fontFamily:"var(--f2)",fontWeight:600,fontSize:"13px",cursor:"pointer"}},"Fermer")
+      )
+    )
+  );
+}
+
+// TIER LIST
+function StarRow({rating,size=12}){
+  return h("div",{className:"mini-stars"},
+    [1,2,3,4,5].map(i=>h("span",{key:i,className:"mini-star"+(rating>=i?" on":""),style:{fontSize:size}},"⭐"))
+  );
+}
+
+function RatingPopup({anime,rating,onRate,onClose}){
+  const [hover,setHover]=useState(0);
+  const LBLS={1:"Décevant",2:"Moyen",3:"Bien",4:"Excellent",5:"Incontournable"};
+  const cur=hover||rating;
+  return h("div",{className:"ov center",onClick:onClose},
+    h("div",{className:"rate-panel",onClick:e=>e.stopPropagation()},
+      h("div",{className:"rate-bg-wrap"},
+        anime.image&&h("img",{className:"rate-bg",src:anime.image,alt:""}),
+        anime.image?h("img",{className:"rate-fg",src:anime.image,alt:""}):h("div",{style:{position:"absolute",left:"50%",top:"50%",transform:"translate(-50%,-50%)",fontSize:"30px"}},"🎬"),
+        h("button",{className:"rate-xbtn",onClick:onClose},"✕")
+      ),
+      h("div",{className:"rate-body"},
+        h("div",{className:"rate-title"},anime.title),
+        h("div",{className:"rate-stars"},
+          [1,2,3,4,5].map(i=>h("span",{key:i,className:"rate-star"+(cur>=i?" on":""),onClick:()=>{onRate(rating===i?0:i);onClose();},onMouseEnter:()=>setHover(i),onMouseLeave:()=>setHover(0)},"⭐"))
+        ),
+        h("div",{className:"rate-lbl"},LBLS[cur]||"Appuie pour noter"),
+        rating>0&&h("button",{className:"rate-clear",onClick:()=>{onRate(0);onClose();}},"Retirer la note")
+      )
+    )
+  );
+}
+
+function TierListPage({items}){
+  const [search,setSearch]=useState("");
+  const [ratingTarget,setRatingTarget]=useState(null);
+  const [ratings,setRatings]=useState(()=>{try{return JSON.parse(localStorage.getItem(SR)||"{}")}catch{return{}}});
+  const saveRating=(id,s)=>{
+    const n={...ratings};
+    if(s===0)delete n[id]; else n[id]=s;
+    setRatings(n);
+    try{localStorage.setItem(SR,JSON.stringify(n))}catch{}
+  };
+  const filtered=useMemo(()=>{
+    if(!search.trim())return items;
+    const q=search.toLowerCase();
+    return items.filter(a=>a.title.toLowerCase().includes(q));
+  },[items,search]);
+  const byStars=useMemo(()=>{
+    const g={5:[],4:[],3:[],2:[],1:[],0:[]};
+    filtered.forEach(a=>g[ratings[a.id]||0].push(a));
+    return g;
+  },[filtered,ratings]);
+  const LBLS={5:"Incontournable",4:"Excellent",3:"Bien",2:"Moyen",1:"Décevant"};
+  return h("div",{className:"tier-page"},
+    h("div",{className:"top-left",style:{marginBottom:"14px"}},h("div",{className:"eyebrow"},"Classement"),h("h1",{style:{fontFamily:"var(--f1)",fontSize:"clamp(30px,8vw,46px)",margin:0,lineHeight:.95}},"Tier List")),
+    h("input",{className:"tier-search",placeholder:"Rechercher...",value:search,onChange:e=>setSearch(e.target.value)}),
+    [5,4,3,2,1].map(s=>byStars[s].length>0&&h("div",{key:s,className:"tier-sec"},
+      h("div",{className:"tier-sec-hd"},
+        h("span",null,"⭐".repeat(s)),
+        h("span",{className:"tier-sec-label"},LBLS[s]),
+        h("span",{className:"tier-sec-count"},byStars[s].length+" animé"+(byStars[s].length>1?"s":""))
+      ),
+      h("div",{className:"tier-grid"},byStars[s].map(a=>h("div",{key:a.id,className:"tier-card",onClick:()=>setRatingTarget(a)},
+        h("div",{className:"tier-art"},a.image?h("img",{src:a.image,alt:a.title,loading:"lazy"}):h("div",{className:"ph",style:{height:"100%"}},h("span",null,"🎬"),h("span",null,a.title))),
+        h("div",{className:"tier-body"},h("div",{className:"tier-name"},a.title),h(StarRow,{rating:ratings[a.id]||0}))
+      )))
+    )),
+    byStars[0].length>0&&h("div",{className:"tier-sec"},
+      h("div",{className:"no-rated-title"},"Non notés ("+byStars[0].length+")"),
+      h("div",{className:"tier-grid"},byStars[0].map(a=>h("div",{key:a.id,className:"tier-card",onClick:()=>setRatingTarget(a)},
+        h("div",{className:"tier-art"},a.image?h("img",{src:a.image,alt:a.title,loading:"lazy"}):h("div",{className:"ph",style:{height:"100%"}},h("span",null,"🎬"),h("span",null,a.title))),
+        h("div",{className:"tier-body"},h("div",{className:"tier-name"},a.title),h(StarRow,{rating:0}))
+      )))
+    ),
+    ratingTarget&&h(RatingPopup,{anime:ratingTarget,rating:ratings[ratingTarget.id]||0,onRate:s=>saveRating(ratingTarget.id,s),onClose:()=>setRatingTarget(null)})
+  );
+}
+
+// ── APP ──────────────────────────────────────────────────────────────────────
+function App(){
+  const [items,setItems]=useState(load);
+  const [page,setPage]=useState("list");
+  const [filter,setFilter]=useState("all");
+  const [search,setSearch]=useState("");
+  const [showAdd,setShowAdd]=useState(false);
+  const [editTarget,setEditTarget]=useState(null);
+  const [deleteTarget,setDeleteTarget]=useState(null);
+  const [photoTarget,setPhotoTarget]=useState(null);
+  const [showTheme,setShowTheme]=useState(false);
+  const [showInstall,setShowInstall]=useState(false);
+  const [saved,setSaved]=useState(false);
+
+  // Apply saved theme on mount
+  useEffect(()=>{
+    const tid=localStorage.getItem(ST)||"dark";
+    const t=THEMES.find(x=>x.id===tid);
+    if(t)applyTheme(t);
+  },[]);
+
+  useQueue(items,setItems);
+
+  // Save
+  useEffect(()=>{
+    try{localStorage.setItem(SK,JSON.stringify(items));setSaved(true);const t=setTimeout(()=>setSaved(false),1200);return()=>clearTimeout(t);}catch{}
+  },[items]);
+
+  const toggleStatus=id=>setItems(p=>p.map(a=>{
+    if(a.id!==id)return a;
+    const ord=["unknown","todo","done"];
+    return{...a,status:ord[(ord.indexOf(a.status)+1)%3]};
+  }));
+  const removeItem=id=>setItems(p=>p.filter(a=>a.id!==id));
+  const addItem=a=>setItems(p=>[a,...p]);
+  const saveEdit=(id,ch)=>setItems(p=>p.map(a=>a.id===id?{...a,...ch}:a));
+
+  const counts=useMemo(()=>{const c={all:items.length,done:0,todo:0,unknown:0};items.forEach(a=>c[a.status]++);return c;},[items]);
+  const filtered=useMemo(()=>{
+    let l=[...items];
+    if(filter!=="all")l=l.filter(a=>a.status===filter);
+    if(search.trim()){const q=search.toLowerCase();l=l.filter(a=>a.title.toLowerCase().includes(q));}
+    l.sort((a,b)=>a.title.localeCompare(b.title,"fr",{sensitivity:"base"}));
+    return l;
+  },[items,filter,search]);
+
+  return h("div",null,
+    page==="list"&&h("div",{className:"wrap"},
+      h(InstallBanner),
+      h("div",{className:"top-bar"},
+        h("div",{className:"top-left"},
+          h("div",{className:"eyebrow"},"Carnet de visionnage"),
+          h("h1",null,"Ma liste animé"),
+          h("div",{className:"save-badge"+(saved?" show":"")},"✓ Sauvegardé")
+        ),
+        h("div",{className:"top-right"},
+          h("button",{className:"install-btn",onClick:()=>setShowInstall(true)},"📲 Installer"),
+          h("button",{className:"icon-action",onClick:()=>setShowTheme(true)},"🎨"),
+          h("button",{className:"icon-action",onClick:()=>setItems(p=>p.map(a=>({...a,imageState:"idle",image:null})))},"🔄"),
+          h("button",{className:"btn-add",onClick:()=>setShowAdd(true)},"+  Ajouter")
+        )
+      ),
+      h("div",{className:"stats"},
+        h("div",{className:"stat"},h("span",{className:"stat-n"},counts.all),h("span",{className:"stat-l"},"Total")),
+        h("div",{className:"stat"},h("span",{className:"stat-n",style:{color:STATUS.done.color}},counts.done),h("span",{className:"stat-l"},"À jour")),
+        h("div",{className:"stat"},h("span",{className:"stat-n",style:{color:STATUS.todo.color}},counts.todo),h("span",{className:"stat-l"},"À voir")),
+        h("div",{className:"stat"},h("span",{className:"stat-n",style:{color:STATUS.unknown.color}},counts.unknown),h("span",{className:"stat-l"},"Non noté"))
+      ),
+      h("div",{className:"controls"},
+        h("div",{className:"tabs"},
+          [{k:"all",l:"Tous"},{k:"done",l:"À jour"},{k:"todo",l:"À voir"},{k:"unknown",l:"Non noté"}]
+          .map(f=>h("button",{key:f.k,className:"tab"+(filter===f.k?" on":""),onClick:()=>setFilter(f.k)},f.l+" ("+counts[f.k]+")"))
+        ),
+        h("input",{className:"search-box",placeholder:"Rechercher...",value:search,onChange:e=>setSearch(e.target.value)})
+      ),
+      filtered.length>0
+        ?h("div",{className:"grid"},filtered.map(a=>h(AnimeCard,{key:a.id,anime:a,onToggle:toggleStatus,onEdit:setEditTarget,onDelete:setDeleteTarget,onPhoto:setPhotoTarget})))
+        :h("div",{style:{textAlign:"center",color:"#6b6053",marginTop:"50px",fontSize:"13px"}},"Aucun animé trouvé.")
+    ),
+    page==="tierlist"&&h(TierListPage,{items}),
+    h("nav",{className:"bnav"},
+      h("button",{className:"nbtn"+(page==="list"?" on":""),onClick:()=>setPage("list")},h("span",{className:"nicon"},"🗂️"),"Ma liste"),
+      h("button",{className:"nbtn"+(page==="tierlist"?" on":""),onClick:()=>setPage("tierlist")},h("span",{className:"nicon"},"⭐"),"Tier List")
+    ),
+    showAdd&&h(AddPanel,{onAdd:addItem,onClose:()=>setShowAdd(false)}),
+    editTarget&&h(EditPanel,{anime:editTarget,onSave:saveEdit,onClose:()=>setEditTarget(null)}),
+    deleteTarget&&h(DeleteConfirm,{anime:deleteTarget,onConfirm:()=>{removeItem(deleteTarget.id);setDeleteTarget(null);},onCancel:()=>setDeleteTarget(null)}),
+    photoTarget&&h(PhotoViewer,{anime:photoTarget,onClose:()=>setPhotoTarget(null)}),
+    showTheme&&h(ThemePicker,{onClose:()=>setShowTheme(false)}),
+    showInstall&&h(InstallGuide,{onClose:()=>setShowInstall(false)})
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(h(App));
+</script>
+
+</body>
+</html>
